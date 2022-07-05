@@ -1,28 +1,25 @@
 package abc;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Scanner;
-
-public class Space {
-
+import abc.Space.Node;
+public class TreeOfSpace {
 	class Node {
 		String nodeName;
 		int user;
 		Node parent;
-		int desCount;
+		boolean isdescendantLocked;
 		boolean isLocked;
 		ArrayList<Node> children;
+		HashMap<String,Integer> lockedNodesMap;
 		
 		public Node(String nodeName) {
 			this.nodeName = nodeName;
 			this.user = -1;
 			this.parent = null;
 			this.isLocked  = false;
-			this.desCount = 0;
+			this.isdescendantLocked = false;
 			this.children = new ArrayList<Node>();
+			this.lockedNodesMap = new HashMap<>();
 		}
 	}
 	HashMap<String,Node> nameToNodeMap = new HashMap<>();
@@ -49,26 +46,29 @@ public class Space {
 	public boolean lock(String node,int userId) {
 		Node currNode = nameToNodeMap.get(node);
 		if(currNode.isLocked) return false;
-		if(currNode.desCount>0) return false;
+		if(currNode.isdescendantLocked) return false;
 		
 		for(Node p = currNode.parent;p!=null;p=p.parent) {
 			if(p.isLocked) return false;
 		}
 		
 		for(Node p = currNode.parent;p!=null;p=p.parent) {
-			p.desCount++;
+			p.isdescendantLocked = true;
+			p.lockedNodesMap.put(node,userId);
 		}
+		
 		currNode.isLocked = true;
 		currNode.user = userId;
 		return true;
 	}
-	
+
 	public boolean unlock(String node,int userId) {
 		Node currNode = nameToNodeMap.get(node);
 		if(!currNode.isLocked) return false;
-		
+		if(currNode.user != userId) return false;
 		for(Node p = currNode.parent;p!=null;p=p.parent) {
-			p.desCount--;
+			p.isdescendantLocked = false;
+			p.lockedNodesMap.remove(node);
 		}
 		currNode.isLocked = false;
 		currNode.user = -1;
@@ -78,36 +78,32 @@ public class Space {
 	public boolean upgrade(String node,int userId) {
 		Node currNode = nameToNodeMap.get(node);
 		if(currNode.isLocked) return false;
-		if(currNode.desCount==0) return false;
+		if(!currNode.isdescendantLocked) return false;
 		if(!check(currNode,userId)) return false;	
-		unlockAllChild(currNode,userId);
-		
+		unlockAllChild(currNode);
+		currNode.lockedNodesMap.clear();
 		currNode.isLocked = true;
 		currNode.user = userId;
 		return true;
 	}
-	private void unlockAllChild(Node root,int userId) {
-		if(root==null) return;
-		for(Node temp: root.children) {
-			unlockAllChild(temp,userId);
-		}
-		if(root.isLocked) {
-			unlock(root.nodeName,userId);
-		}
-	}
+	
 	private boolean check(Node root,int userId) {
-		if(root==null) return true;
-		if(root.isLocked && root.user != userId) {
-			return false;
-		}
-		for(Node temp: root.children) {
-			if(check(temp,userId)==false) return false;
+		for(String key : root.lockedNodesMap.keySet()) {
+			if(root.lockedNodesMap.get(key)!=userId) return false;
 		}
 		return true;
 	}
+	
+	private void unlockAllChild(Node root) {
+		for(String key : root.lockedNodesMap.keySet()) {
+			Node currNode = nameToNodeMap.get(key);
+			currNode.isLocked = false;
+		}
+	}
+	
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
-		Space ob = new Space();
+		TreeOfSpace ob = new TreeOfSpace();
 		int n = sc.nextInt();
 		int k = sc.nextInt();
 		int q = sc.nextInt();
@@ -116,6 +112,7 @@ public class Space {
 		for(int i=0;i<n;i++) {
 			nodes[i] = sc.next();
 		}
+		
 		Node root = ob.buildTree(nodes,k,n);
 		for(int i=0;i<=q;i++) {
 			String c = sc.nextLine();
@@ -135,16 +132,27 @@ public class Space {
 					break;
 			}
 		}
-		
 	}
 }
 
+
 /*
  
-7 2 5
-world asia africa china india sa egypt
-1 china 9
-1 india 9
-3 asia 9
+7
+2
+5
+World
+Asia
+Africa
+India
+China
+SA
+Egypt
+1 China 9
+1 India 9
+3 Asia 9
+2 India 9
+2 Asia 9
  
  * */
+ 
