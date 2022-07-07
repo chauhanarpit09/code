@@ -61,28 +61,20 @@ public class MyLock {
 	}
 	
 	public synchronized void unlockThread(String name) {
-		try {
-			if(threadLockMap.get(name)==1) {
-				threadLockMap.remove(name);
-				String parent= parentMap.get(name);
-				while(parent.charAt(0)!='1') {
-					threadLockedChildListMap.get(parent).remove(name);
-					parent= parentMap.get(parent);
-				}
-			} else {
-				threadLockMap.put(name,threadLockMap.get(name)-1);
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
+		threadLockMap.remove(name);
+		String parent= parentMap.get(name);
+		while(parent.charAt(0)!='1') {
+			threadLockedChildListMap.get(parent).remove(name);
+			parent= parentMap.get(parent);
 		}
-		
+		notify();
 		/*
 		System.out.println();
 		System.out.println(this.threadLockedChildListMap);
 		System.out.println(this.threadLockMap);
 		System.out.println();
 		*/
-		notify();
+		
 		
 	}
 }
