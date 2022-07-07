@@ -39,25 +39,23 @@ public class MyLock {
 		}
 		
 		try {
-			if(threadLockMap.contains(name)) {
-				threadLockMap.put(name,threadLockMap.get(name)+1);
-			} else {
-				threadLockMap.put(name, 1);
-				parent= parentMap.get(name);
-				while(parent.charAt(0)!='1') {
-					threadLockedChildListMap.get(parent).add(name);
-					parent= parentMap.get(parent);
-				}
+
+			threadLockMap.put(name, 1);
+			parent= parentMap.get(name);
+			while(parent.charAt(0)!='1') {
+				threadLockedChildListMap.get(parent).add(name);
+				parent= parentMap.get(parent);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		
-		
+		/*
 		System.out.println();
 		System.out.println(this.threadLockedChildListMap);
 		System.out.println(this.threadLockMap);
 		System.out.println();
+		*/
 		
 		
 	}
